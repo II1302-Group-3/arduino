@@ -7,7 +7,7 @@ dht DHT;
 void setup(){
   Serial.begin(9600);
 }
-#comment for the comment gods
+//comment for the comment gods
 void loop(){
   double moisture;
   int chk = DHT.read11(DHT11_PIN);
