@@ -1,0 +1,66 @@
+#include <dht.h>
+// Include the Wire library for I2C
+#include <Wire.h>
+dht DHT;
+
+#define DHT11_PIN 7
+
+const int relayPin = 13; 
+char buff[10];
+
+double moisture;
+double moisture_threshold = 300;
+double light_threshold;
+
+void setup(){
+  // Setup pin 13 as output and turn LED off
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, LOW);
+
+  //start serial comm over USB
+  Serial.begin(9600);
+
+   // Join I2C bus as slave with address 8
+  Wire.begin(0x8);
+  
+  // Call receiveEvent when data received                
+  Wire.onReceive(receiveEvent);
+}
+// Function that executes whenever data is received from master
+void receiveEvent(int howMany) {
+  double c = 0;
+  while (Wire.available()) { // loop through all but the last
+    //char c = Wire.read(); // receive byte as a character
+    Wire.readBytes(buff,4);
+    c = buff[0] + buff[1] + buff[2] + buff[3];
+  }
+  /*if(c > 0){
+    moisture_threshold += c;
+  }
+  else{
+    moisture_threshold = 0;
+  }
+  */
+  moisture_threshold = c;
+  Serial.print("Temperature = ");
+  Serial.println(DHT.temperature);
+  Serial.print("Humidity = ");
+  Serial.println(DHT.humidity);
+  Serial.print("Moisture Sensor Value:");
+  Serial.println(moisture);
+  Serial.print("Moisture threshold: ");
+  Serial.println(moisture_threshold);
+}
+
+void loop(){
+  int chk = DHT.read11(DHT11_PIN);
+  
+  moisture = analogRead(2);
+  
+  if(moisture < moisture_threshold){
+    digitalWrite(relayPin, 0x1);
+    delay(2000);
+    digitalWrite(relayPin, 0x0);
+  }
+  delay(2000);
+}
