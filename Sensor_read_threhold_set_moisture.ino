@@ -5,7 +5,7 @@ dht DHT;
 
 #define DHT11_PIN 7
 
-const int relayPin = 13; 
+const int relayPin = 8; 
 char buff[10];
 
 double moisture;
@@ -45,8 +45,9 @@ void loop(){
   
   if(moisture < moisture_threshold){
     digitalWrite(relayPin, 0x1);
-    delay(2000);
+    delay(500);
     digitalWrite(relayPin, 0x0);
+    delay(5000);
   }
   if(print_flag == 1){
     Serial.print("Temperature = ");
