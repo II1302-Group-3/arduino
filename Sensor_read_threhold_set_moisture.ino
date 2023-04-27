@@ -9,7 +9,7 @@ const int relayPin = 8;
 char buff[10];
 
 double moisture;
-double moisture_threshold = 300;
+double moisture_threshold = 0;
 double light_threshold;
 double c = 0;
 char print_flag = 0;
