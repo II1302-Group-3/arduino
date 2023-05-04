@@ -8,22 +8,14 @@ dht DHT;
 const int relayPin = 8; 
 char buff[10];
 //unsigned char sendData[4];
-unsigned char sendData[4];
+unsigned char sendData[6]; // 2 bytes for temp, 2 for humiidity, 2 for moisture
 int index = 0;
 
-double moisture;
+double moisture = 0;
 double moisture_threshold = 0;
-double light_threshold;
 double c = 0;
 char print_flag = 0;
 
-
-//converter union structure
-
-union {
-    float ival;
-    byte bval[4];
-} floatAsBytes;
 
 void setup(){
   // Setup pin 13 as output and turn LED off
@@ -31,7 +23,7 @@ void setup(){
   digitalWrite(relayPin, LOW);
 
   //start serial comm over USB
-  Serial.begin(57600);
+  Serial.begin(9600);
 
    // Join I2C bus as slave with address 8
   Wire.begin(0x8);
@@ -42,20 +34,15 @@ void setup(){
   // send data to arduino
   Wire.onRequest(sendEvent);
 }
-
 //callback for sending data
-
-
-byte* toByteArray(float val,int size){
-    floatAsBytes.ival = val;
-    byte* byteArr = new byte[size];   // Dynamically allocate byte array
-    for(int i = 0; i < 4; i++){
-        byteArr[i] = floatAsBytes.bval[i];
+  void sendEvent(){
+ 
+    Wire.write(sendData[index]);
+    ++index;
+    if(index >= sizeof(sendData)){
+      index = 0;
     }
-    return byteArr;
-}
-
-
+  }
 
 // Function that executes whenever data is received from master
 void receiveEvent(int howMany) {
@@ -78,6 +65,7 @@ void loop(){
     digitalWrite(relayPin, 0x0);
     delay(5000);
   }
+  /*
   if(print_flag == 1){
     Serial.print("Temperature = ");
     Serial.println(DHT.temperature);
@@ -88,29 +76,38 @@ void loop(){
     Serial.print("Moisture threshold: ");
     Serial.println(moisture_threshold);
     print_flag = 0;
+    
   }
-  for(int i = 0; i < 4; i++){
-    sendData[i] = toByteArray(DHT.temperature,4)[i];
-  }
+  */
 
+  //prepare temp data for i2c write
+  float temp = DHT.temperature;
+  int tempsend = (int)temp;
+  sendData[0] = (tempsend >>8);
+  sendData[1] = (tempsend >>0);
+  //prepare humidity data for i2c write
+  float humidity = DHT.humidity;
+  int humiditysend = (int)humidity;
+  sendData[2] = (humiditysend >>8);
+  sendData[3] = (humiditysend >>0);
+  //prepare moisture data for i2c write
+  int moisturesend = (int)moisture;
+  sendData[4] = (moisturesend >>8);
+  sendData[5] = (moisturesend >>0);
+  Serial.print("moisturesend: ");
+  Serial.println(moisturesend);
+  Serial.print("moisture: ");
+  Serial.println(moisture);
+  /*
+  Serial.println(sendData)
+  Serial.println(DHT.temperature);
+  Serial.print(sendData[0]);
+  Serial.print(" ");
+  Serial.print(sendData[1]);
+  Serial.print(" ");
+  Serial.print(sendData[2]);
+  Serial.print(" ");
+  Serial.println(sendData[3]);
+  */
   delay(2000);
-  }
-
-  /*void getTemp(){
-       for(int i = 0; i < 4; i++){
-        sendData[i] = toByteArray(DHT.temperature,4)[i];
-    }
-  }*/
-
-  void sendEvent(){
-    /*floatAsBytes.ival = DHT.humidity;
-    for(int i = 0; i < 4; i++){
-        sendData[i] = floatAsBytes.bval[i];
-    }*/
- 
-    Wire.write(sendData[index]);
-    ++index;
-    if(index >= sizeof(sendData)){
-      index = 0;
-    }
   }
