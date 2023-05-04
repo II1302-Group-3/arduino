@@ -7,12 +7,23 @@ dht DHT;
 
 const int relayPin = 8; 
 char buff[10];
+//unsigned char sendData[4];
+unsigned char sendData[4];
+int index = 0;
 
 double moisture;
 double moisture_threshold = 0;
 double light_threshold;
 double c = 0;
 char print_flag = 0;
+
+
+//converter union structure
+
+union {
+    float ival;
+    byte bval[4];
+} floatAsBytes;
 
 void setup(){
   // Setup pin 13 as output and turn LED off
@@ -27,7 +38,25 @@ void setup(){
   
   // Call receiveEvent when data received                
   Wire.onReceive(receiveEvent);
+
+  // send data to arduino
+  Wire.onRequest(sendEvent);
 }
+
+//callback for sending data
+
+
+byte* toByteArray(float val,int size){
+    floatAsBytes.ival = val;
+    byte* byteArr = new byte[size];   // Dynamically allocate byte array
+    for(int i = 0; i < 4; i++){
+        byteArr[i] = floatAsBytes.bval[i];
+    }
+    return byteArr;
+}
+
+
+
 // Function that executes whenever data is received from master
 void receiveEvent(int howMany) {
 
@@ -60,5 +89,28 @@ void loop(){
     Serial.println(moisture_threshold);
     print_flag = 0;
   }
+  for(int i = 0; i < 4; i++){
+    sendData[i] = toByteArray(DHT.temperature,4)[i];
+  }
+
   delay(2000);
-}
+  }
+
+  /*void getTemp(){
+       for(int i = 0; i < 4; i++){
+        sendData[i] = toByteArray(DHT.temperature,4)[i];
+    }
+  }*/
+
+  void sendEvent(){
+    /*floatAsBytes.ival = DHT.humidity;
+    for(int i = 0; i < 4; i++){
+        sendData[i] = floatAsBytes.bval[i];
+    }*/
+ 
+    Wire.write(sendData[index]);
+    ++index;
+    if(index >= sizeof(sendData)){
+      index = 0;
+    }
+  }
