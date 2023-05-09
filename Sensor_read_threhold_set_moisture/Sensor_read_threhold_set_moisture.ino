@@ -111,10 +111,15 @@ void loop(){
   sendData[4] = (moisturesend >>8);
   sendData[5] = (moisturesend >>0);
 
-  /*Serial.print("moisturesend: ");
+  Serial.print("moisturesend: ");
   Serial.println(moisturesend);
   Serial.print("moisture: ");
-  Serial.println(moisture);*/
+  Serial.println(moisture);
+
+  Serial.print("humiditysend: ");
+  Serial.println(humiditysend);
+  Serial.print("humididty: ");
+  Serial.println(humidity);
   /*
   Serial.println(sendData)
   Serial.println(DHT.temperature);
